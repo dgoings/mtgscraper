@@ -5,13 +5,15 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "parcel index.js"
+    "build": "parcel index.js",
+    "scrape": "node index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cheerio": "^1.0.0-rc.5",
-    "nodejs-web-scraper": "^4.2.1"
+    "nodejs-web-scraper": "^4.2.1",
+    "yargs": "^16.2.0"
   },
   "devDependencies": {
     "esm": "^3.2.25",
