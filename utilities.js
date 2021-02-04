@@ -33,3 +33,19 @@ export const getSetMap = () => {
 export const getCardMap = () => {
   return JSON.parse(fs.readFileSync(path.join(__dirname, './cards/cards.json')));
 }
+
+export const exportCardsToCSV = () => {
+  const cardMap = getCardMap();
+  const header = `Card Name,Edition,Foil,Quantity,Credit\n`;
+
+  let csv = '';
+  csv += header;
+
+  Object.entries(cardMap).forEach(([set, cards]) => {
+    cards.forEach((card) => {
+      csv += `"${card.title}",${set},${card.foil},${card.qty},${card.credit}\n`
+    });
+  });
+
+  return csv;
+}
