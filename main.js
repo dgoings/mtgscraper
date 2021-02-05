@@ -4,7 +4,7 @@ const yargs = require('yargs');
 const { hideBin } = require('yargs/helpers');
 import { getCardsFromSets } from './queries/getAllFromSet';
 import { getAllSets } from './queries/getAllSets';
-import { exportCardsToCSV } from './utilities';
+import { exportCardsToCSV, getSetCode } from './utilities';
 
 export default async function() {
   const argv = yargs(hideBin(process.argv))
@@ -16,7 +16,7 @@ export default async function() {
       default: false
     })
     .command({
-      command: 'scrape [sets] [filters]',
+      command: 'scrape [sets] [filters] [file]',
       aliases: ['sc'],
       describe: 'Scrape all provided sets',
       builder: (yargs) => {
@@ -51,14 +51,36 @@ Can use comma separated list for multiple rarities
 
 "price:(<=|>=)XX.YY" - Specify price operator and value in XX dollars YY cents`,
           type: 'array'
+        }).option('file', {
+          describe: 'Filepath for output file',
+          type: 'string'
+        }).option('csv', {
+          describe: 'Convert results directly to CSV',
+          type: 'boolean',
+          default: false
         })
       }
     })
     .command({
-      command: 'csv',
+      command: 'csv [input] [output]',
       describe: 'export cards to csv file',
+      builder: (yargs) => {
+        yargs.option('input', {
+          alias: ['inputFile', 'in', 'read'],
+          describe: 'Filepath to read input JSON file to be converted',
+          type: 'string'
+        }).option('output', {
+          alias: ['outputFile', 'out', 'write'],
+          describe: 'Filepath to write output CSV file to',
+          type: 'string'
+        })
+      }
+    })
+    .command({
+      command: 'code <setName>',
+      describe: 'Get the set code for a set',
       handler: (argv) => {
-        console.log(`Converting cards.json file to csv`)
+        console.log(getSetCode(argv.setName))
       }
     })
     .example('$0 scrape --sets "Fallen Empires" "Chronicles"', 'Scrape the FEM and CHR sets')
@@ -74,18 +96,29 @@ Can use comma separated list for multiple rarities
   if (argv.update) {
     console.log('updating set file');
     const sets = await getAllSets();
-    fs.writeFileSync(path.join(__dirname, '../cards/sets.json'), JSON.stringify(sets), () => { });
+    fs.writeFileSync(path.join(process.cwd(), './cards/sets.json'), JSON.stringify(sets), () => { });
   }
 
   const cmd = argv._[0];
 
   if (cmd === 'scrape' || cmd === 'sc') {
     const myCards = await getCardsFromSets(argv.sets, argv.filters);
-    fs.writeFileSync(path.resolve(__dirname, '../cards/cards.json'), JSON.stringify(myCards), () => { });
+
+    const output = (argv.csv)
+      ? exportCardsToCSV(myCards)
+      : JSON.stringify(myCards);
+
+    const outputFile = (argv.file)
+      ? argv.file
+      : (argv.csv)
+        ? './cards/cards.csv'
+        : './cards/cards.json';
+
+    fs.writeFileSync(path.resolve(process.cwd(), outputFile), output, () => { });
   }
 
   if (cmd === 'csv') {
-    const csv = exportCardsToCSV();
-    fs.writeFileSync(path.resolve(__dirname, '../cards/cards.csv'), csv, () => { });
+    const csv = exportCardsToCSV(argv.inputFile || './cards/cards.json');
+    fs.writeFileSync(path.resolve(process.cwd(), argv.outputFile || './cards/cards.csv'), csv, () => { });
   }
 };

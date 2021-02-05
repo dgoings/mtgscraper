@@ -100,27 +100,37 @@ const buildQuery = (queryOptions) => {
 };
 
 const getSetMap = () => {
-  return JSON.parse(fs.readFileSync(path.resolve(__dirname, '../cards/sets.json')));
+  return JSON.parse(fs.readFileSync(path.resolve(process.cwd(), './cards/sets.json')));
 };
 
-const getCardMap = () => {
-  return JSON.parse(fs.readFileSync(path.resolve(__dirname, '../cards/cards.json')));
+const getCardMap = (file) => {
+  return JSON.parse(fs.readFileSync(path.resolve(process.cwd(), file)));
 };
 
-const exportCardsToCSV = () => {
-  const cardMap = getCardMap();
+const exportCardsToCSV = (cards) => {
+  const cardMap = (typeof cards === 'string') ? getCardMap(file) : cards;
   const header = `Card Name,Edition,Foil,Quantity,Cash,Credit\n`;
 
   let csv = '';
   csv += header;
 
   Object.entries(cardMap).forEach(([set, cards]) => {
+    const setCode = getSetCode(set);
     cards.forEach((card) => {
-      csv += `"${card.title}",${set},${card.foil},${card.qty},${card.cash},${card.credit}\n`;
+      csv += `"${card.title}",${setCode},${card.foil},${card.qty},${card.cash},${card.credit}\n`;
     });
   });
 
   return csv;
+};
+
+const setCodeMap = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), './cards/SetList.json'))).data.reduce((acc, set, i) => {
+  acc[set.name] = set.code;
+  return acc;
+}, {});
+
+const getSetCode = (setName) => {
+  return setCodeMap[setName];
 };
 
 const { Scraper, Root, CollectContent } = require('nodejs-web-scraper');
@@ -274,7 +284,7 @@ async function main() {
       default: false
     })
     .command({
-      command: 'scrape [sets] [filters]',
+      command: 'scrape [sets] [filters] [file]',
       aliases: ['sc'],
       describe: 'Scrape all provided sets',
       builder: (yargs) => {
@@ -309,14 +319,36 @@ Can use comma separated list for multiple rarities
 
 "price:(<=|>=)XX.YY" - Specify price operator and value in XX dollars YY cents`,
           type: 'array'
+        }).option('file', {
+          describe: 'Filepath for output file',
+          type: 'string'
+        }).option('csv', {
+          describe: 'Convert results directly to CSV',
+          type: 'boolean',
+          default: false
         });
       }
     })
     .command({
-      command: 'csv',
+      command: 'csv [input] [output]',
       describe: 'export cards to csv file',
+      builder: (yargs) => {
+        yargs.option('input', {
+          alias: ['inputFile', 'in', 'read'],
+          describe: 'Filepath to read input JSON file to be converted',
+          type: 'string'
+        }).option('output', {
+          alias: ['outputFile', 'out', 'write'],
+          describe: 'Filepath to write output CSV file to',
+          type: 'string'
+        });
+      }
+    })
+    .command({
+      command: 'code <setName>',
+      describe: 'Get the set code for a set',
       handler: (argv) => {
-        console.log(`Converting cards.json file to csv`);
+        console.log(getSetCode(argv.setName));
       }
     })
     .example('$0 scrape --sets "Fallen Empires" "Chronicles"', 'Scrape the FEM and CHR sets')
@@ -332,19 +364,30 @@ Can use comma separated list for multiple rarities
   if (argv.update) {
     console.log('updating set file');
     const sets = await getAllSets();
-    fs$1.writeFileSync(path$1.join(__dirname, '../cards/sets.json'), JSON.stringify(sets), () => { });
+    fs$1.writeFileSync(path$1.join(process.cwd(), './cards/sets.json'), JSON.stringify(sets), () => { });
   }
 
   const cmd = argv._[0];
 
   if (cmd === 'scrape' || cmd === 'sc') {
     const myCards = await getCardsFromSets(argv.sets, argv.filters);
-    fs$1.writeFileSync(path$1.resolve(__dirname, '../cards/cards.json'), JSON.stringify(myCards), () => { });
+
+    const output = (argv.csv)
+      ? exportCardsToCSV(myCards)
+      : JSON.stringify(myCards);
+
+    const outputFile = (argv.file)
+      ? argv.file
+      : (argv.csv)
+        ? './cards/cards.csv'
+        : './cards/cards.json';
+
+    fs$1.writeFileSync(path$1.resolve(process.cwd(), outputFile), output, () => { });
   }
 
   if (cmd === 'csv') {
-    const csv = exportCardsToCSV();
-    fs$1.writeFileSync(path$1.resolve(__dirname, '../cards/cards.csv'), csv, () => { });
+    const csv = exportCardsToCSV(argv.inputFile || './cards/cards.json');
+    fs$1.writeFileSync(path$1.resolve(process.cwd(), argv.outputFile || './cards/cards.csv'), csv, () => { });
   }
 }
 

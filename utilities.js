@@ -1,9 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// currently just an example search
-const defaultQueryString = `?filter%5Bsort%5D=price_desc&filter%5Bsearch%5D=mtg_advanced&filter%5Bname%5D=&filter%5Bcategory_id%5D=2530&filter%5Bfoil%5D=1&filter%5Bnonfoil%5D=1&filter%5Bprice_op%5D=&filter%5Bprice%5D=`;
-
 const defaultOptions = {
   sort: "price_desc",
   search: "mtg_advanced",
@@ -101,25 +98,35 @@ export const buildQuery = (queryOptions) => {
 }
 
 export const getSetMap = () => {
-  return JSON.parse(fs.readFileSync(path.resolve(__dirname, '../cards/sets.json')));
+  return JSON.parse(fs.readFileSync(path.resolve(process.cwd(), './cards/sets.json')));
 }
 
-export const getCardMap = () => {
-  return JSON.parse(fs.readFileSync(path.resolve(__dirname, '../cards/cards.json')));
+export const getCardMap = (file) => {
+  return JSON.parse(fs.readFileSync(path.resolve(process.cwd(), file)));
 }
 
-export const exportCardsToCSV = () => {
-  const cardMap = getCardMap();
+export const exportCardsToCSV = (cards) => {
+  const cardMap = (typeof cards === 'string') ? getCardMap(file) : cards;
   const header = `Card Name,Edition,Foil,Quantity,Cash,Credit\n`;
 
   let csv = '';
   csv += header;
 
   Object.entries(cardMap).forEach(([set, cards]) => {
+    const setCode = getSetCode(set);
     cards.forEach((card) => {
-      csv += `"${card.title}",${set},${card.foil},${card.qty},${card.cash},${card.credit}\n`
+      csv += `"${card.title}",${setCode},${card.foil},${card.qty},${card.cash},${card.credit}\n`
     });
   });
 
   return csv;
+}
+
+const setCodeMap = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), './cards/SetList.json'))).data.reduce((acc, set, i) => {
+  acc[set.name] = set.code;
+  return acc;
+}, {});
+
+export const getSetCode = (setName) => {
+  return setCodeMap[setName];
 }
