@@ -1,3 +1,3 @@
-require = require("esm")(module)
+var scraper = require('./build/scraper.js');
 
-module.exports = require("./main.js")
+scraper();

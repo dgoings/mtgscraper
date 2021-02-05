@@ -1,7 +1,7 @@
+const cheerio = require('cheerio');
+const { Root, CollectContent } = require('nodejs-web-scraper');
 import { buildQuery } from '../utilities';
 import { CKScraper } from '../scraper';
-import { Root, CollectContent } from 'nodejs-web-scraper';
-import cheerio from 'cheerio';
 
 export const getAllSets = async () => {
   const mySets={};

@@ -1,26 +1,29 @@
-import { Root, CollectContent } from 'nodejs-web-scraper';
-import cheerio from 'cheerio';
-import { buildQuery, getSetMap } from '../utilities';
+const { Root, CollectContent } = require('nodejs-web-scraper');
+const cheerio = require('cheerio');
+import { buildQuery, getSetMap, parseFilters } from '../utilities';
 import { CKScraper } from '../scraper';
 
-const getAllCardsFromSet = async (setID) => {
+const getAllCardsFromSet = async (setID, filters = {}) => {
   const myCards=[];
   const getElementContent = (element) => {
     const $ = cheerio.load(element, null, false);
     const title = $('.productDetailTitle').text();
     const foil = $('.productDetailSet .foil').text();
-    const dollarAmount = $('.creditSellPrice .sellDollarAmount').text();
-    const centsAmount = $('.creditSellPrice .sellCentsAmount').text();
+    const cashDollarAmount = $('.usdSellPrice .sellDollarAmount').text();
+    const cashCentsAmount = $('.usdSellPrice .sellCentsAmount').text();
+    const creditDollarAmount = $('.creditSellPrice .sellDollarAmount').text();
+    const creditCentsAmount = $('.creditSellPrice .sellCentsAmount').text();
     const qty = $('ul.qtyList li').last().text();
     myCards.push({
       title,
-      credit: `${dollarAmount}.${centsAmount}`,
       qty,
-      foil: foil.length ? true : false
+      foil: foil.length ? true : false,
+      cash: `${cashDollarAmount}.${cashCentsAmount}`,
+      credit: `${creditDollarAmount}.${creditCentsAmount}`
     });
   }
 
-  const scraper = new CKScraper(buildQuery({category_id: setID}));
+  const scraper = new CKScraper(buildQuery({...filters, category_id: setID}));
 
   const cards = new CollectContent('ul.itemList.buyList li .itemContentWrapper', {
     contentType: 'html',
@@ -37,17 +40,19 @@ const getAllCardsFromSet = async (setID) => {
   return myCards;
 }
 
-export const getCardsFromSets = async (sets) => {
+export const getCardsFromSets = async (sets, filters) => {
   const setMap = getSetMap();
   const setNames = Object.keys(setMap);
   const filteredSets = sets.filter((set) => {
     return setNames.includes(set)
   });
 
+  const parsedFilters = filters ? parseFilters(filters) : {};
+
   const buylist = {};
 
   await Promise.all(filteredSets.map(async (set) => {
-    const cards = await getAllCardsFromSet(setMap[set]);
+    const cards = await getAllCardsFromSet(setMap[set], parsedFilters);
     buylist[set] = cards;
   }));
 

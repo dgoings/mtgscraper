@@ -1,28 +1,28 @@
-import { Scraper, Root, CollectContent } from 'nodejs-web-scraper';
+const { Scraper, Root, CollectContent } = require('nodejs-web-scraper');
+
+const baseConfig = {
+  baseSiteUrl: `https://cardkingdom.com`,
+  filePath: './cards/',
+  logPath: './logs/'
+}
 
 export class CKScraper {
-  #baseConfig = {
-    baseSiteUrl: `https://cardkingdom.com`,
-    filePath: './cards/',
-    logPath: './logs/'
-  }
-
-  #constructScraper(query) {
+  constructScraper(query) {
     return new Scraper({
-      ...this.#baseConfig,
+      ...baseConfig,
       startUrl: `https://cardkingdom.com/purchasing/mtg_singles?${query}`,
     });
   }
 
   constructor(query) {
-    this.scraper = this.#constructScraper(query);
+    this.scraper = this.constructScraper(query);
   }
 
   async scrape(root) {
     await this.scraper.scrape(root)
   }
 
-  async #getPageCount() {
+  async getPageCount() {
     const pageRoot = new Root();
     const pageCount = new CollectContent('.mainListing .pagination li a', { name: 'page' });
     pageRoot.addOperation(pageCount);
@@ -43,7 +43,7 @@ export class CKScraper {
     return {
       queryString: 'page',
       begin: 1,
-      end: await this.#getPageCount()
+      end: await this.getPageCount()
     }
   }
 }

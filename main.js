@@ -1,11 +1,12 @@
-import fs from 'fs';
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
+const fs = require('fs');
+const path = require('path');
+const yargs = require('yargs');
+const { hideBin } = require('yargs/helpers');
 import { getCardsFromSets } from './queries/getAllFromSet';
 import { getAllSets } from './queries/getAllSets';
 import { exportCardsToCSV } from './utilities';
 
-(async () => {
+export default async function() {
   const argv = yargs(hideBin(process.argv))
     .usage('$0 <cmd> [args]')
     .option('u', {
@@ -23,11 +24,33 @@ import { exportCardsToCSV } from './utilities';
           alias: ['editions','s'],
           type: 'array',
           demandOption: true,
-          describe: 'Set names to scrape; wrap multi-word names in quotes'
+          default: "All Editions",
+          group: 'Sets:',
+          describe: `List all set names to scrape
+Must wrap multi-word names in quotes
+
+Special set options:
+All Editions - Don't filter by set (only use in conjunction with other filters)
+Standard - Search standard legal sets
+Modern - Search modern legal sets
+Pioneer - Search pioneer legal sets`
         }).option('filters', {
           alias: ['f'],
-          type: 'array',
-          describe: 'Additional filters for scraping'
+          group: 'Filters:',
+          describe: `Available filters:
+
+nonfoil:yes|no - Show nonfoil cards (default yes)
+
+foil:yes|no - Show foil cards (default yes).
+Note that cards with no nonfoil printing (e.g. FTV cards) may still show up with foil:no
+
+rarity:mythic|rare|uncommon|common|basic|special - Which rarities to show
+Can use comma separated list for multiple rarities
+
+"name:cardname" - Search for cardname in card titles (regex only on whole words)
+
+"price:(<=|>=)XX.YY" - Specify price operator and value in XX dollars YY cents`,
+          type: 'array'
         })
       }
     })
@@ -43,24 +66,26 @@ import { exportCardsToCSV } from './utilities';
     .example('$0 sc -s "Kaldheim" -f rarity:mythic', 'Scrape the KLD set for just mythics')
     .example('$0 csv', 'Convert all scraped cards to a .csv file')
     .help()
-    .wrap(120)
+    .wrap(yargs.terminalWidth())
     .argv
+
+  // console.log(argv)
 
   if (argv.update) {
     console.log('updating set file');
     const sets = await getAllSets();
-    fs.writeFileSync('./cards/sets.json', JSON.stringify(sets), () => { });
+    fs.writeFileSync(path.join(__dirname, '../cards/sets.json'), JSON.stringify(sets), () => { });
   }
 
   const cmd = argv._[0];
 
   if (cmd === 'scrape' || cmd === 'sc') {
-    const myCards = await getCardsFromSets(argv.sets);
-    fs.writeFileSync('./cards/cards.json', JSON.stringify(myCards), () => { });
+    const myCards = await getCardsFromSets(argv.sets, argv.filters);
+    fs.writeFileSync(path.resolve(__dirname, '../cards/cards.json'), JSON.stringify(myCards), () => { });
   }
 
   if (cmd === 'csv') {
     const csv = exportCardsToCSV();
-    fs.writeFileSync('./cards/cards.csv', csv, () => { });
+    fs.writeFileSync(path.resolve(__dirname, '../cards/cards.csv'), csv, () => { });
   }
-})()
+};
