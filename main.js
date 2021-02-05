@@ -83,6 +83,11 @@ Can use comma separated list for multiple rarities
         console.log(getSetCode(argv.setName))
       }
     })
+    .command({
+      command: 'update',
+      alias: 'u',
+      describe: 'Update the setlist mapping'
+    })
     .example('$0 scrape --sets "Fallen Empires" "Chronicles"', 'Scrape the FEM and CHR sets')
     .example('$0 scrape --sets Kaldheim --filters foil:no -u', 'Scrape the KLD set excluding foils, after updating the set list')
     .example('$0 sc -s "Kaldheim" -f rarity:mythic', 'Scrape the KLD set for just mythics')
@@ -93,13 +98,13 @@ Can use comma separated list for multiple rarities
 
   // console.log(argv)
 
-  if (argv.update) {
+  const cmd = argv._[0];
+
+  if (argv.update || (cmd === 'update') || (cmd === 'u')) {
     console.log('updating set file');
     const sets = await getAllSets();
     fs.writeFileSync(path.join(process.cwd(), './cards/sets.json'), JSON.stringify(sets), () => { });
   }
-
-  const cmd = argv._[0];
 
   if (cmd === 'scrape' || cmd === 'sc') {
     const myCards = await getCardsFromSets(argv.sets, argv.filters);
