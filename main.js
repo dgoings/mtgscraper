@@ -89,9 +89,13 @@ Can use comma separated list for multiple rarities
       describe: 'Update the setlist mapping'
     })
     .example('$0 scrape --sets "Fallen Empires" "Chronicles"', 'Scrape the FEM and CHR sets')
+    .example('$0 update', 'Update the CardKingdom setlist mapping for scraping (run before your first scrape)')
     .example('$0 scrape --sets Kaldheim --filters foil:no -u', 'Scrape the KLD set excluding foils, after updating the set list')
     .example('$0 sc -s "Kaldheim" -f rarity:mythic', 'Scrape the KLD set for just mythics')
-    .example('$0 csv', 'Convert all scraped cards to a .csv file')
+    .example('$0 code Kaldheim', 'Get the Wizards TLA set code for the set')
+    .example('$0 sc -s "Kaldheim" --file kld.json', 'Write the scrape results to the file kld.json')
+    .example('$0 csv --input ./kld.json --output ./kld.csv', 'Convert all scraped cards to a .csv file')
+    .example('$0 scrape -s Legends --csv --file legends.csv', 'Export results directly to csv file')
     .help()
     .wrap(yargs.terminalWidth())
     .argv
