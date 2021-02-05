@@ -7,14 +7,14 @@ export const getAllSets = async () => {
   const mySets={};
   const getSetInfo = (element) => {
     const $ = cheerio.load(element, null, false);
-    $('option').each((i, elem) => {
-      mySets[$(elem).text().trim()] = $(elem).attr("value");
+    $('a').each((i, elem) => {
+      mySets[$(elem).text().trim()] = $(elem).attr("href").match(/catalog\/view\/(\d+)$/)[1];
     });
   }
 
-  const scraper = new CKScraper(buildQuery());
+  const scraper = new CKScraper(buildQuery('catalog/magic_the_gathering/by_az'));
 
-  const sets = new CollectContent('#editionContainer select', {
+  const sets = new CollectContent('.anchorList table td', {
     contentType: 'html',
     getElementContent: getSetInfo
   });

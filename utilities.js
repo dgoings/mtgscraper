@@ -1,12 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const defaultOptions = {
-  sort: "price_desc",
-  search: "mtg_advanced",
-  category_id: "0"
-}
-
 export const parseFilters = (filters) => {
 
   const parsedFilters = filters.reduce((acc, filter) => {
@@ -78,23 +72,21 @@ export const parseFilters = (filters) => {
 }
 
 // Eventually this should dynamically build a query string based on input params
-export const buildQuery = (queryOptions) => {
-  const options = {
-    ...defaultOptions,
-    ...queryOptions
-  }
-
-  const queryString = Object.entries(options).reduce((acc, [key, value]) => {
+export const buildQuery = (baseUrl, queryOptions = {}) => {
+  const queryString = Object.entries(queryOptions).reduce((acc, [key, value]) => {
     if (key === 'rarity') {
       const rarityFilters = value.reduce((acc, rarity, i) => {
         return acc.concat(`&filter[rarity][${i}]=${rarity}`)
       }, '');
       return acc.concat(rarityFilters);
     }
-    return acc.concat(`&filter[${key}]=${value}`);
-  }, '');
+    return acc.concat(`filter[${key}]=${value}&`);
+  }, '?');
 
-  return encodeURI(queryString.slice(1));
+  // const url = encodeURI(`${baseUrl}${queryString.slice(0, -1)}`);
+  // console.log(url);
+  // return url;
+  return encodeURI(`${baseUrl}${queryString.slice(0, -1)}`);
 }
 
 export const getSetMap = () => {
@@ -113,7 +105,7 @@ export const exportCardsToCSV = (cards) => {
   csv += header;
 
   Object.entries(cardMap).forEach(([set, cards]) => {
-    const setCode = getSetCode(set);
+    const setCode = getSetCode(set) || set;
     cards.forEach((card) => {
       csv += `"${card.title}",${setCode},${card.foil},${card.qty},${card.cash},${card.credit}\n`
     });
@@ -123,10 +115,10 @@ export const exportCardsToCSV = (cards) => {
 }
 
 const setCodeMap = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), './cards/SetList.json'))).data.reduce((acc, set, i) => {
-  acc[set.name] = set.code;
+  acc[set.name.toLowerCase()] = set.code;
   return acc;
 }, {});
 
 export const getSetCode = (setName) => {
-  return setCodeMap[setName];
+  return setCodeMap[setName.toLowerCase()];
 }

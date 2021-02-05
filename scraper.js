@@ -10,7 +10,7 @@ export class CKScraper {
   constructScraper(query) {
     return new Scraper({
       ...baseConfig,
-      startUrl: `https://cardkingdom.com/purchasing/mtg_singles?${query}`,
+      startUrl: `https://cardkingdom.com/${query}`,
     });
   }
 

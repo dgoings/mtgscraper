@@ -3,12 +3,18 @@ const cheerio = require('cheerio');
 import { buildQuery, getSetMap, parseFilters } from '../utilities';
 import { CKScraper } from '../scraper';
 
+const defaultOptions = {
+  sort: "price_desc",
+  search: "mtg_advanced",
+  category_id: "0",
+}
+
 const getAllCardsFromSet = async (setID, filters = {}) => {
   const myCards=[];
   const getElementContent = (element) => {
     const $ = cheerio.load(element, null, false);
     const title = $('.productDetailTitle').text();
-    const foil = $('.productDetailSet .foil').text();
+    const [match, edition, foil] = $('.productDetailSet').text().trim().match(/(.+) \([MRUCLS]\) ?(FOIL)?/);
     const cashDollarAmount = $('.usdSellPrice .sellDollarAmount').text();
     const cashCentsAmount = $('.usdSellPrice .sellCentsAmount').text();
     const creditDollarAmount = $('.creditSellPrice .sellDollarAmount').text();
@@ -17,13 +23,14 @@ const getAllCardsFromSet = async (setID, filters = {}) => {
     myCards.push({
       title,
       qty,
-      foil: foil.length ? true : false,
+      edition,
+      foil: foil ? true : false,
       cash: `${cashDollarAmount}.${cashCentsAmount}`,
       credit: `${creditDollarAmount}.${creditCentsAmount}`
     });
   }
 
-  const scraper = new CKScraper(buildQuery({...filters, category_id: setID}));
+  const scraper = new CKScraper(buildQuery('purchasing/mtg_singles', {...defaultOptions, ...filters, category_id: setID}));
 
   const cards = new CollectContent('ul.itemList.buyList li .itemContentWrapper', {
     contentType: 'html',
