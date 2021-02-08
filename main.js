@@ -4,36 +4,47 @@ const yargs = require('yargs');
 const { hideBin } = require('yargs/helpers');
 import { getCardsFromSets } from './queries/getAllFromSet';
 import { getAllSets } from './queries/getAllSets';
-import { exportCardsToCSV, getSetCode } from './utilities';
+import { exportCardsToCSV, getSetCode, findSets } from './utilities';
 
 export default async function() {
   const argv = yargs(hideBin(process.argv))
     .usage('$0 <cmd> [args]')
-    .option('u', {
-      alias: 'update',
-      describe: 'Update setlist before scraping',
-      type: 'boolean',
-      default: false
+    .command({
+      command: 'code <setName>',
+      describe: 'Get the Wizards three-letter code for a set',
+      handler: (argv) => {
+        console.log(getSetCode(argv.setName))
+      }
     })
     .command({
-      command: 'scrape [sets] [filters] [file]',
+      command: 'update',
+      alias: 'u',
+      describe: 'Update the setlist mapping'
+    })
+    .command({
+      command: 'search <query>',
+      describe: 'Search all sets for possible options to scrape, query is any valid JS regex',
+      handler: (argv) => {
+        console.log(findSets(argv.query))
+      }
+    })
+    .command({
+      command: 'scrape [sets] [filters] [file] [search]',
       aliases: ['sc'],
       describe: 'Scrape all provided sets',
       builder: (yargs) => {
         yargs.option('sets', {
           alias: ['editions','s'],
           type: 'array',
-          demandOption: true,
-          default: "All Editions",
           group: 'Sets:',
           describe: `List all set names to scrape
 Must wrap multi-word names in quotes
+Default output file: ./cards/cards.json
 
 Special set options:
 All Editions - Don't filter by set (only use in conjunction with other filters)
 Standard - Search standard legal sets
-Modern - Search modern legal sets
-Pioneer - Search pioneer legal sets`
+Modern - Search modern legal sets`
         }).option('filters', {
           alias: ['f'],
           group: 'Filters:',
@@ -58,6 +69,15 @@ Can use comma separated list for multiple rarities
           describe: 'Convert results directly to CSV',
           type: 'boolean',
           default: false
+        }).option('search', {
+          alias: 'query',
+          describe: 'Scrape all sets that match the search query. Can be combined with --sets',
+          type: 'string'
+        }).option('update', {
+          alias: 'u',
+          describe: 'Update setlist before scraping',
+          type: 'boolean',
+          default: false
         })
       }
     })
@@ -76,26 +96,16 @@ Can use comma separated list for multiple rarities
         })
       }
     })
-    .command({
-      command: 'code <setName>',
-      describe: 'Get the set code for a set',
-      handler: (argv) => {
-        console.log(getSetCode(argv.setName))
-      }
-    })
-    .command({
-      command: 'update',
-      alias: 'u',
-      describe: 'Update the setlist mapping'
-    })
-    .example('$0 scrape --sets "Fallen Empires" "Chronicles"', 'Scrape the FEM and CHR sets')
     .example('$0 update', 'Update the CardKingdom setlist mapping for scraping (run before your first scrape)')
+    .example('$0 scrape --sets "Fallen Empires" "Chronicles"', 'Scrape the FEM and CHR sets')
     .example('$0 scrape --sets Kaldheim --filters foil:no -u', 'Scrape the KLD set excluding foils, after updating the set list')
-    .example('$0 sc -s "Kaldheim" -f rarity:mythic', 'Scrape the KLD set for just mythics')
+    .example('$0 sc -s Kaldheim -f rarity:mythic', 'Scrape the KLD set for just mythics')
     .example('$0 code Kaldheim', 'Get the Wizards TLA set code for the set')
-    .example('$0 sc -s "Kaldheim" --file kld.json', 'Write the scrape results to the file kld.json')
+    .example('$0 sc -s Kaldheim --file kld.json', 'Write the scrape results to the file kld.json')
     .example('$0 csv --input ./kld.json --output ./kld.csv', 'Convert all scraped cards to a .csv file')
     .example('$0 scrape -s Legends --csv --file legends.csv', 'Export results directly to csv file')
+    .example('$0 search theros', 'Get list of all sets with "theros" in the name')
+    .example('$0 scrape --sets Kaldheim --search theros', 'Scrape Kaldheim plus all sets that match the search "theros"')
     .help()
     .wrap(yargs.terminalWidth())
     .argv
@@ -111,7 +121,9 @@ Can use comma separated list for multiple rarities
   }
 
   if (cmd === 'scrape' || cmd === 'sc') {
-    const myCards = await getCardsFromSets(argv.sets, argv.filters);
+    const sets = argv.sets || [];
+    const querySets = findSets(argv.query || '');
+    const myCards = await getCardsFromSets(sets.concat(querySets), argv.filters);
 
     const output = (argv.csv)
       ? exportCardsToCSV(myCards)

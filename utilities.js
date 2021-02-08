@@ -122,3 +122,12 @@ const setCodeMap = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), './car
 export const getSetCode = (setName) => {
   return setCodeMap[setName.toLowerCase()];
 }
+
+export const findSets = (query) => {
+  if (!query.length) return [];
+  const sets = getSetMap();
+  const re = new RegExp(query, 'i');
+  return Object.keys(sets).filter((set) => {
+    return set.match(re)
+  })
+}

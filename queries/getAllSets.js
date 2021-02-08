@@ -12,17 +12,33 @@ export const getAllSets = async () => {
     });
   }
 
-  const scraper = new CKScraper(buildQuery('catalog/magic_the_gathering/by_az'));
+  const setScraper = new CKScraper(buildQuery('catalog/magic_the_gathering/by_az'));
 
   const sets = new CollectContent('.anchorList table td', {
     contentType: 'html',
     getElementContent: getSetInfo
   });
 
-  const cardRoot = new Root();
-  cardRoot.addOperation(sets);
+  const setsRoot = new Root();
+  setsRoot.addOperation(sets);
 
-  await scraper.scrape(cardRoot);
+  await setScraper.scrape(setsRoot);
+
+  const blockScraper = new CKScraper(buildQuery('catalog/magic_the_gathering/by_block'));
+
+  const setBlocks = new CollectContent('.shopMain .subpageWrapper div', {
+    contentType: 'html',
+    getElementContent: getSetInfo
+  });
+
+  const blocksRoot = new Root();
+  blocksRoot.addOperation(setBlocks);
+
+  await blockScraper.scrape(blocksRoot);
+
+  mySets['All Editions'] = "0";
+  mySets['Standard'] = "2779";
+  mySets['Modern'] = "2864";
 
   return mySets;
 }

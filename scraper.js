@@ -3,7 +3,8 @@ const { Scraper, Root, CollectContent } = require('nodejs-web-scraper');
 const baseConfig = {
   baseSiteUrl: `https://cardkingdom.com`,
   filePath: './cards/',
-  logPath: './logs/'
+  logPath: './logs/',
+  delay: 1000
 }
 
 export class CKScraper {
