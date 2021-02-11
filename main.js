@@ -10,10 +10,16 @@ export default async function() {
   const argv = yargs(hideBin(process.argv))
     .usage('$0 <cmd> [args]')
     .command({
-      command: 'code <setName>',
+      command: 'code <setNames..>',
       describe: 'Get the Wizards three-letter code for a set',
+      builder: (yargs) => {
+        yargs.positional('setNames', {
+          type: 'array',
+          describe: 'List of names to search'
+        })
+      },
       handler: (argv) => {
-        console.log(getSetCode(argv.setName))
+        argv.setNames.forEach((set) => console.log(getSetCode(set)))
       }
     })
     .command({
@@ -82,7 +88,7 @@ Can use comma separated list for multiple rarities
       }
     })
     .command({
-      command: 'csv [input] [output]',
+      command: 'csv <input> <output> [options]',
       describe: 'export cards to csv file',
       builder: (yargs) => {
         yargs.option('input', {
@@ -93,6 +99,10 @@ Can use comma separated list for multiple rarities
           alias: ['outputFile', 'out', 'write'],
           describe: 'Filepath to write output CSV file to',
           type: 'string'
+        }).option('options', {
+          describe: 'Set processing options for the output csv file',
+          type: 'array',
+          choices: ['rl', 'cashonly', 'creditonly']
         })
       }
     })
@@ -110,7 +120,7 @@ Can use comma separated list for multiple rarities
     .wrap(yargs.terminalWidth())
     .argv
 
-  // console.log(argv)
+  console.log(argv)
 
   const cmd = argv._[0];
 
@@ -139,7 +149,13 @@ Can use comma separated list for multiple rarities
   }
 
   if (cmd === 'csv') {
-    const csv = exportCardsToCSV(argv.inputFile || './cards/cards.json');
+    const options = {
+      rl: argv.options.includes('rl'),
+      cashonly: argv.options.includes('cashonly'),
+      creditonly: argv.options.includes('creditonly')
+    }
+    console.log(options);
+    const csv = exportCardsToCSV(argv.inputFile || './cards/cards.json', options);
     fs.writeFileSync(path.resolve(process.cwd(), argv.outputFile || './cards/cards.csv'), csv, () => { });
   }
 };

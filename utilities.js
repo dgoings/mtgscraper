@@ -97,30 +97,84 @@ export const getCardMap = (file) => {
   return JSON.parse(fs.readFileSync(path.resolve(process.cwd(), file)));
 }
 
-export const exportCardsToCSV = (cards) => {
-  const cardMap = (typeof cards === 'string') ? getCardMap(file) : cards;
-  const header = `Card Name,Edition,Foil,Quantity,Cash,Credit\n`;
+export const isReserved = (cardName, cards) => {
+  const card = cards.find((card) => {
+    return card.name === cardName
+  });
+  if (card) {
+    return card.isReserved || false;
+  }
+  return false
+}
 
-  let csv = '';
-  csv += header;
+export const exportCardsToCSV = (cards, options = {}) => {
+  const cardMap = (typeof cards === 'string') ? getCardMap(cards) : cards;
+  const baseHeader = `Card Name,Edition,Foil,Quantity`;
+
+  const priceHeader = (options.cashonly)
+    ? `${baseHeader},Cash`
+    : (options.creditonly)
+      ? `${baseHeader},Credit`
+      : `${baseHeader},Cash,Credit`;
+
+  const header = (options.rl)
+    ? `${priceHeader},RL`
+    : `${priceHeader}`;
+
+  let csv = `${header}\n`;
+
+  const cardSetsMap = {};
 
   Object.entries(cardMap).forEach(([set, cards]) => {
-    const setCode = getSetCode(set) || set;
     cards.forEach((card) => {
-      csv += `"${card.title}",${setCode},${card.foil},${card.qty},${card.cash},${card.credit}\n`
+      const setCode = getSetCode(card.edition) || set;
+      if (!cardSetsMap.setCode) {
+        const cardFile = getCardMap(`./assets/allSets/${setCode}.json`)
+        cardSetsMap[setCode] = cardFile;
+      }
+
+      csv += `"${card.title}",${setCode},${card.foil},${card.qty}`;
+      if (options.cashonly) {
+        csv += `,${card.cash}`
+      } else if (options.creditonly) {
+        csv += `,${card.credit}`
+      } else {
+        csv += `,${card.cash},${card.cash}`
+      }
+      if (options.rl && cardSetsMap[setCode] && cardSetsMap[setCode].data) {
+        const isRL = isReserved(card.title, cardSetsMap[setCode].data.cards || []);
+        csv += `,${isRL}\n`;
+      } else {
+        csv += `\n`;
+      }
     });
   });
 
   return csv;
 }
 
-const setCodeMap = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), './cards/SetList.json'))).data.reduce((acc, set, i) => {
+const setCodeMap = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), './assets/SetList.json'))).data.reduce((acc, set, i) => {
   acc[set.name.toLowerCase()] = set.code;
   return acc;
 }, {});
 
 export const getSetCode = (setName) => {
-  return setCodeMap[setName.toLowerCase()];
+  let mappedName = setName;
+  if (setName.match(/Variants$/)) {
+    mappedName = setName.match(/(.+) Variants$/)[1];
+  }
+  if (setName === 'Commander 2011') {
+    mappedName = 'Commander';
+  }
+  if (setName.match(/Collectors/)) {
+    if (setName.match(/Intl/)) {
+      mappedName = 'Intl. Collectors’ Edition'
+    } else {
+      mappedName = 'Collectors’ Edition'
+    }
+  }
+
+  return setCodeMap[mappedName.toLowerCase()];
 }
 
 export const findSets = (query) => {
