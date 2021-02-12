@@ -6,7 +6,7 @@ import { getCardsFromSets } from './queries/getAllFromSet';
 import { getAllSets } from './queries/getAllSets';
 import { exportCardsToCSV, getSetCode, findSets } from './utilities';
 
-export default async function() {
+export async function mtgscraper() {
   const argv = yargs(hideBin(process.argv))
     .usage('$0 <cmd> [args]')
     .command({
@@ -120,7 +120,7 @@ Can use comma separated list for multiple rarities
     .wrap(yargs.terminalWidth())
     .argv
 
-  console.log(argv)
+  // console.log(argv)
 
   const cmd = argv._[0];
 

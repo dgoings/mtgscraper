@@ -1,24 +1,33 @@
 {
-  "name": "mtgscraper",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rollup -c",
-    "build:watch": "rollup -c -w",
-    "scrape": "node index.js"
-  },
-  "author": "",
+  "name": "@dgoings/mtgscraper",
+  "version": "0.1.0",
+  "description": "A CLI tool for scraping the CardKingdom buylist",
+  "author": "Dylan Goings <dylan@dgoings.com>",
   "license": "ISC",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "@your_npm_username/mtgscraper": "bin/mtgscraper",
+    "mtgscraper": "bin/mtgscraper"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "assets/"
+  ],
+  "keywords": [
+    "cli",
+    "magic",
+    "mtg",
+    "cardkingdom",
+    "magic:the-gathering"
+  ],
   "dependencies": {
     "cheerio": "^1.0.0-rc.5",
+    "esm": "^3.2.25",
     "nodejs-web-scraper": "^4.2.1",
     "yargs": "^16.2.0"
-  },
-  "devDependencies": {
-    "@rollup/plugin-node-resolve": "^11.1.1",
-    "esm": "^3.2.25",
-    "rollup": "^2.38.5"
   }
 }
