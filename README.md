@@ -4,7 +4,7 @@ This tool is designed to provide a lightweight command line utility to scrape th
 
 ## Installation
 
-`npm install -g @dgoings/mtgscraper
+`npm install -g @dgoings/mtgscraper`
 
 ## Use
 
