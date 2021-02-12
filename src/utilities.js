@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 export const parseFilters = (filters) => {
-
   const parsedFilters = filters.reduce((acc, filter) => {
     const splitFilter = filter.split(':', 2);
     switch (splitFilter[0]) {
@@ -71,7 +70,6 @@ export const parseFilters = (filters) => {
   return parsedFilters;
 }
 
-// Eventually this should dynamically build a query string based on input params
 export const buildQuery = (baseUrl, queryOptions = {}) => {
   const queryString = Object.entries(queryOptions).reduce((acc, [key, value]) => {
     if (key === 'rarity') {
@@ -83,18 +81,15 @@ export const buildQuery = (baseUrl, queryOptions = {}) => {
     return acc.concat(`filter[${key}]=${value}&`);
   }, '?');
 
-  // const url = encodeURI(`${baseUrl}${queryString.slice(0, -1)}`);
-  // console.log(url);
-  // return url;
   return encodeURI(`${baseUrl}${queryString.slice(0, -1)}`);
 }
 
 export const getSetMap = () => {
-  return JSON.parse(fs.readFileSync(path.resolve(process.cwd(), './cards/sets.json')));
+  return JSON.parse(fs.readFileSync(path.resolve(__dirname, '../assets/sets.json')));
 }
 
 export const getCardMap = (file) => {
-  return JSON.parse(fs.readFileSync(path.resolve(process.cwd(), file)));
+  return JSON.parse(fs.readFileSync(path.resolve(__dirname, file)));
 }
 
 export const isReserved = (cardName, cards) => {
@@ -129,7 +124,7 @@ export const exportCardsToCSV = (cards, options = {}) => {
     cards.forEach((card) => {
       const setCode = getSetCode(card.edition) || set;
       if (!cardSetsMap.setCode) {
-        const cardFile = getCardMap(`./assets/allSets/${setCode}.json`)
+        const cardFile = getCardMap(`../assets/allSets/${setCode}.json`)
         cardSetsMap[setCode] = cardFile;
       }
 
@@ -153,7 +148,7 @@ export const exportCardsToCSV = (cards, options = {}) => {
   return csv;
 }
 
-const setCodeMap = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), './assets/SetList.json'))).data.reduce((acc, set, i) => {
+const setCodeMap = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../assets/SetList.json'))).data.reduce((acc, set, i) => {
   acc[set.name.toLowerCase()] = set.code;
   return acc;
 }, {});
