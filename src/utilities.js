@@ -134,7 +134,7 @@ export const exportCardsToCSV = (cards, options = {}) => {
       } else if (options.creditonly) {
         csv += `,${card.credit}`
       } else {
-        csv += `,${card.cash},${card.cash}`
+        csv += `,${card.cash},${card.credit}`
       }
       if (options.rl && cardSetsMap[setCode] && cardSetsMap[setCode].data) {
         const isRL = isReserved(card.title, cardSetsMap[setCode].data.cards || []);
