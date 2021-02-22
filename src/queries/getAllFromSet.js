@@ -14,7 +14,7 @@ const getAllCardsFromSet = async (setID, filters = {}) => {
   const getElementContent = (element) => {
     const $ = cheerio.load(element, null, false);
     const title = $('.productDetailTitle').text();
-    const [match, edition, foil] = $('.productDetailSet').text().trim().match(/(.+) \([MRUCLS]\) ?(FOIL)?/);
+    const [match, edition, rarity, foil] = $('.productDetailSet').text().trim().match(/(.+) \(([MRUCLS])\) ?(FOIL)?/);
     const cashDollarAmount = $('.usdSellPrice .sellDollarAmount').text();
     const cashCentsAmount = $('.usdSellPrice .sellCentsAmount').text();
     const creditDollarAmount = $('.creditSellPrice .sellDollarAmount').text();
@@ -24,6 +24,7 @@ const getAllCardsFromSet = async (setID, filters = {}) => {
       title,
       qty,
       edition,
+      rarity,
       foil: foil ? true : false,
       cash: `${cashDollarAmount}.${cashCentsAmount}`,
       credit: `${creditDollarAmount}.${creditCentsAmount}`

@@ -104,7 +104,7 @@ export const isReserved = (cardName, cards) => {
 
 export const exportCardsToCSV = (cards, options = {}) => {
   const cardMap = (typeof cards === 'string') ? getCardMap(cards) : cards;
-  const baseHeader = `Card Name,Edition,Foil,Quantity`;
+  const baseHeader = `Card Name,Edition,Foil,Quantity,Rarity`;
 
   const priceHeader = (options.cashonly)
     ? `${baseHeader},Cash`
@@ -128,7 +128,7 @@ export const exportCardsToCSV = (cards, options = {}) => {
         cardSetsMap[setCode] = cardFile;
       }
 
-      csv += `"${card.title}",${setCode},${card.foil},${card.qty}`;
+      csv += `"${card.title}",${setCode},${card.foil},${card.qty},${card.rarity}`;
       if (options.cashonly) {
         csv += `,${card.cash}`
       } else if (options.creditonly) {
