@@ -4,7 +4,8 @@ const yargs = require('yargs');
 const { hideBin } = require('yargs/helpers');
 import { getCardsFromSets } from './queries/getAllFromSet';
 import { getAllSets } from './queries/getAllSets';
-import { exportCardsToCSV, getSetCode, findSets } from './utilities';
+import { getSetCode, findSets } from './utilities/utilities';
+import { exportCardsToCSV } from './utilities/csv';
 
 export async function mtgscraper() {
   const argv = yargs(hideBin(process.argv))

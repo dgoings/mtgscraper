@@ -1,6 +1,6 @@
 const { Root, CollectContent } = require('nodejs-web-scraper');
 const cheerio = require('cheerio');
-import { buildQuery, getSetMap, parseFilters } from '../utilities';
+import { buildQuery, getSetMap, parseFilters } from '../utilities/utilities';
 import { CKScraper } from '../scraper';
 
 const defaultOptions = {
